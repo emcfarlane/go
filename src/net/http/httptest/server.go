@@ -121,6 +121,35 @@ func NewUnstartedServer(handler http.Handler) *Server {
 	}
 }
 
+// NewUnstartedPipeServer returns a new Server that listens on a
+// unique in-memory pipe.
+//
+// The provided addr argument is used as the address of the
+// net.Listener that serves the pipes. It may be safely left blank in
+// most cases, in which case DefaultRemoteAddr is used.
+//
+// If non-basic features of either HTTP or a network connection are
+// needed, such as redirects or timeouts, the standard Server should
+// be used.
+//
+// After changing its configuration, the caller should call Start or
+// StartTLS.
+//
+// The caller should call Close when finished, to shut it down.
+func NewUnstartedPipeServer(addr string, handler http.Handler) *Server {
+	if addr == "" {
+		addr = DefaultRemoteAddr
+	}
+	pipelistener := newPipeListener(addr)
+	return &Server{
+		Listener: pipelistener,
+		Config:   &http.Server{Handler: handler},
+		client: &http.Client{Transport: &http.Transport{
+			DialContext: pipelistener.DialContext,
+		}},
+	}
+}
+
 // Start starts a server from NewUnstartedServer.
 func (s *Server) Start() {
 	if s.URL != "" {

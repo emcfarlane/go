@@ -31,6 +31,11 @@ var newServers = map[string]newServerFunc{
 		ts.StartTLS()
 		return ts
 	},
+	"NewUnstartedPipeServer": func(h http.Handler) *Server {
+		ts := NewUnstartedPipeServer("", h)
+		ts.Start()
+		return ts
+	},
 }
 
 func TestServer(t *testing.T) {
